@@ -1,35 +1,55 @@
-import throttle from 'lodash.throttle';
-
+// Отримати елемент форми
 const form = document.querySelector('.feedback-form');
-const emailInput = form.querySelector('input[name="email"]');
-const messageInput = form.querySelector('textarea[name="message"]');
-const localStorageKey = 'feedback-form-state';
+const emailInput = form.elements.email;
+const messageInput = form.elements.message;
 
-const stateOfStorage = JSON.parse(localStorage.getItem(localStorageKey) || {});
-messageInput.value = stateOfStorage.message || '';
-emailInput.value = stateOfStorage.email || '';
+const saveFormData = () => {
+  const formData = {
+    email: emailInput.value,
+    message: messageInput.value,
+  };
 
-form.addEventListener('input', function () {
-  saveToLocalStorage();
-});
+  const jsonString = JSON.stringify(formData);
+
+  localStorage.setItem('feedback-form-state', jsonString);
+};
+
+form.addEventListener('input', saveFormData);
+
+const populateFormFields = () => {
+  const jsonString = localStorage.getItem('feedback-form-state');
+
+  if (jsonString) {
+    const formData = JSON.parse(jsonString);
+
+    emailInput.value = formData.email;
+    messageInput.value = formData.message;
+  }
+};
+
+document.addEventListener('DOMContentLoaded', populateFormFields);
 
 const handleSubmit = event => {
   event.preventDefault();
 
-  console.log('Email: ' + emailInput.value);
-  console.log('Message: ' + messageInput.value);
+  const jsonString = localStorage.getItem('feedback-form-state');
 
-  localStorage.removeItem(localStorageKey);
-
-  form.reset();
+  if (jsonString) {
+    const formData = JSON.parse(jsonString);
+    console.log(formData);
+    localStorage.removeItem('feedback-form-state');
+    form.reset();
+  }
 };
-
 form.addEventListener('submit', handleSubmit);
-
-const saveToLocalStorage = throttle(() => {
-  const data = {
+import throttle from 'lodash.throttle';
+const savedFormData = () => {
+  const formData = {
     email: emailInput.value,
     message: messageInput.value,
   };
-  localStorage.setItem(localStorageKey, JSON.stringify(data));
-}, 500);
+  const jsonString = JSON.stringify(formData);
+  localStorage.setItem('feedback-form-state', jsonString);
+};
+const throttledSaveFormData = throttle(savedFormData, 500);
+form.addEventListener('input', throttledSaveFormData);
